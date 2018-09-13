@@ -1,0 +1,6 @@
+smart_title.settings:
+  title: 'Smart Title'
+  route_name: smart_title.settings
+  description: 'Manage Smart Title configuration'
+  parent: system.admin_config_ui
+  weight: 91

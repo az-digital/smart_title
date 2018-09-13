@@ -1,0 +1,483 @@
+<?php
+
+/**
+ * @file
+ * Contains hooks and private functions of smart_title.module.
+ */
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function smart_title_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the smart_title module.
+    case 'help.page.smart_title':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Smart Title makes content entity labels visible and configurable on Field UI forms.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function smart_title_theme() {
+  return [
+    'smart_title' => [
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
+ * Implements template_preprocess_hook() for smart_title.
+ *
+ * Prepares variables for smart title template.
+ *
+ * Default template: smart-title.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: An associative array containing the properties of the whole
+ *     element.
+ *     Properties used: #tag, #attributes, #children.
+ */
+function template_preprocess_smart_title(array &$variables) {
+  $element = $variables['element'];
+  $element += ['#attributes' => []];
+  $variables['children'] = $element['#children'];
+  $variables['attributes'] = $element['#attributes'];
+  $variables['tag'] = Html::escape($element['#tag']);
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function smart_title_form_entity_view_display_form_alter(&$form, FormStateInterface $form_state) {
+  $config = \Drupal::service('config.factory')->get('smart_title.settings');
+  $smartTitleConfig = $config->get('smart_title');
+
+  $form_state_entity = $form_state->getFormObject()->getEntity();
+  $target_entity_type_id = $form_state_entity->getTargetEntityTypeId();
+  $target_entity_bundle = $form_state_entity->getTargetBundle();
+
+  if ($smartTitleConfig && in_array("$target_entity_type_id:$target_entity_bundle", $smartTitleConfig)) {
+    $form['smart_title'] = [
+      '#type' => 'details',
+      '#title' => t('Smart Title'),
+      '#group' => 'additional_settings',
+    ];
+
+    $form['smart_title']['smart_title__enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Make entity title configurable'),
+      '#description' => t('Check this box if you would like a configurable entity label for this view mode.'),
+      '#default_value' => $form_state_entity->getThirdPartySetting('smart_title', 'enabled', FALSE),
+    ];
+
+    $form['#entity_builders'][] = 'smart_title_entity_view_display_form_builder';
+  }
+
+  if ($form_state_entity->getThirdPartySetting('smart_title', 'enabled', FALSE)) {
+    array_unshift($form['actions']['submit']['#submit'], '_smart_title_entity_view_display_submit');
+    $provide_form = !empty($form_state->getStorage()['plugin_settings_edit']) && $form_state->getStorage()['plugin_settings_edit'] === 'smart_title';
+    $smart_title = &$form['fields']['smart_title'];
+    $smart_title['plugin']['settings_edit_form'] = [];
+
+    if ($smart_title['region']['#default_value'] !== 'hidden') {
+      // Extra field is set to be visible.
+      // Getting our settings.
+      $smart_title_settings = $form_state_entity->getThirdPartySetting('smart_title', 'settings', [
+        'smart_title__tag' => 'h2',
+        'smart_title__classes' => Html::getClass($target_entity_type_id . '__title'),
+        'smart_title__link' => TRUE,
+      ]);
+
+      if ($provide_form) {
+        unset($smart_title['settings_summary']);
+        unset($smart_title['settings_edit']);
+        $smart_title['#attributes']['class'][] = 'field-plugin-settings-editing';
+        $smart_title['plugin']['#cell_attributes'] = ['colspan' => 3];
+        $smart_title['plugin']['settings_edit_form'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['field-plugin-settings-edit-form']],
+          '#parents' => [
+            'fields',
+            'smart_title',
+            'settings_edit_form',
+          ],
+          'label' => [
+            '#markup' => t('<strong>Smart Title</strong> settings'),
+          ],
+          'settings' => [
+            'smart_title__tag' => [
+              '#type' => 'select',
+              '#title' => t('HTML tag to use'),
+              '#options' => _smart_title_tag_options(),
+              '#required' => TRUE,
+              '#default_value' => $smart_title_settings['smart_title__tag'],
+            ],
+            'smart_title__classes' => [
+              '#type' => 'textfield',
+              '#title' => t('Title HTML classes'),
+              '#default_value' => $smart_title_settings['smart_title__classes'],
+            ],
+            'smart_title__link' => [
+              '#type' => 'checkbox',
+              '#title' => t('Link to the entity'),
+              '#default_value' => $smart_title_settings['smart_title__link'],
+            ],
+          ],
+          'third_party_settings' => [],
+          'actions' => [
+            '#type' => 'actions',
+            'save_settings' => [
+              '#submit' => [
+                '_smart_title_entity_view_display_multistep_submit',
+                '::multistepSubmit',
+              ],
+              '#ajax' => [
+                'callback' => '::multistepAjax',
+                'wrapper' => 'field-display-overview-wrapper',
+                'effect' => 'fade',
+              ],
+              '#field_name' => 'smart_title',
+              '#type' => 'submit',
+              '#button_type' => 'primary',
+              '#name' => 'smart_title_plugin_settings_update',
+              '#value' => t('Update'),
+              '#op' => 'update',
+            ],
+            'cancel_settings' => [
+              '#submit' => ['::multistepSubmit'],
+              '#ajax' => [
+                'callback' => '::multistepAjax',
+                'wrapper' => 'field-display-overview-wrapper',
+                'effect' => 'fade',
+              ],
+              '#field_name' => 'smart_title',
+              '#type' => 'submit',
+              '#name' => 'smart_title_plugin_settings_cancel',
+              '#value' => t('Cancel'),
+              '#op' => 'cancel',
+              '#limit_validation_errors' => [
+                [
+                  'fields',
+                  'smart_title',
+                  'type',
+                ],
+              ],
+            ],
+          ],
+        ];
+      }
+      else {
+        $summary = [];
+        foreach ($smart_title_settings as $key => $value) {
+          if ($key === 'smart_title__link') {
+            if (!empty($value)) {
+              $summary[] = t('Links to entity');
+            }
+            continue;
+          }
+
+          $summary[] = mb_convert_case(str_replace('smart_title__', '', $key), MB_CASE_TITLE) . ': ' . $value;
+        }
+
+        $smart_title['settings_summary'] = [
+          '#type' => 'inline_template',
+          '#template' => '<div class="field-plugin-summary">{{ summary|safe_join("<br />") }}</div>',
+          '#context' => [
+            'summary' => $summary,
+          ],
+          '#cell_attributes' => ['class' => ['field-plugin-summary-cell']],
+        ];
+
+        $smart_title['settings_edit'] = [
+          '#submit' => ['::multistepSubmit'],
+          '#ajax' => [
+            'callback' => '::multistepAjax',
+            'wrapper' => "field-display-overview-wrapper",
+            'effect' => "fade",
+          ],
+          '#field_name' => "smart_title",
+          '#type' => "image_button",
+          '#name' => "smart_title_settings_edit",
+          '#src' => "core/misc/icons/787878/cog.svg",
+          '#attributes' => [
+            'class' => ["field-plugin-settings-edit"],
+            'alt' => t('Edit'),
+          ],
+          '#op' => "edit",
+          '#limit_validation_errors' => [['fields', 'smart_title', 'type']],
+          '#prefix' => '<div class="field-plugin-settings-edit-wrapper">',
+          '#suffix' => '</div>',
+        ];
+      }
+    }
+  }
+  else {
+    // Hide the extra field.
+    unset($form['#extra'][array_search('smart_title', $form['#extra'])]);
+    unset($form['fields']['smart_title']);
+  }
+}
+
+/**
+ * Entity form builder for the entity view display form.
+ *
+ * Mapping values provided by Smart Title module to third party settings.
+ *
+ * @see smart_title_form_entity_view_display_form_alter()
+ */
+function smart_title_entity_view_display_form_builder($entity_type, EntityViewDisplayInterface $entity_view_display, array &$form, FormStateInterface $form_state) {
+  if ($form_state->getValue('smart_title__enabled')) {
+    $entity_view_display->setThirdPartySetting('smart_title', 'enabled', TRUE);
+  }
+  else {
+    // @TODO: remove smart_title from every view display entity at this type.
+    $entity_view_display
+      ->unsetThirdPartySetting('smart_title', 'enabled')
+      ->unSetThirdPartySetting('smart_title', 'settings')
+      ->removeComponent('smart_title');
+  }
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function smart_title_entity_extra_field_info() {
+  $extra = [];
+
+  $config = \Drupal::service('config.factory')->get('smart_title.settings');
+  $smartTitleConfig = $config->get('smart_title') ?: [];
+
+  foreach ($smartTitleConfig as $entityTypeAndBundle) {
+    list($entityTypeId, $bundle) = explode(':', $entityTypeAndBundle);
+    $extra[$entityTypeId][$bundle]['display']['smart_title'] = [
+      'label' => t('Smart Title'),
+      'weight' => -5,
+      'visible' => FALSE,
+    ];
+  }
+
+  return $extra;
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function smart_title_entity_view(&$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if (
+    !$entity->isNew() &&
+    $display->getThirdPartySettings('smart_title', 'enabled') &&
+    $display->getComponent('smart_title')
+  ) {
+    // For first, we need the entity type dependent name of the label base
+    // field.
+    $labelKey = $entity->getEntityType()->getKey('label');
+    $smart_title_settings = $display->getThirdPartySetting('smart_title', 'settings', [
+      'smart_title__tag' => 'h2',
+      'smart_title__classes' => Html::getClass($entity->getEntityTypeId() . '__title'),
+      'smart_title__link' => TRUE,
+    ]);
+
+    $classes_arr = explode(' ', $smart_title_settings['smart_title__classes']);
+    foreach ($classes_arr as $key => $value) {
+      $classes_arr[$key] = Html::getClass($value);
+    }
+
+    if (!empty($build[$labelKey])) {
+      $smart_title = $build[$labelKey];
+      $build[$labelKey]['#access'] = FALSE;
+    }
+    else {
+      $smart_title = $entity->$labelKey->view([
+        'label' => 'hidden',
+      ]);
+    }
+
+    $smart_title['#theme_wrappers']['smart_title'] = [
+      '#tag' => $smart_title_settings['smart_title__tag'],
+      '#attributes' => ['class' => $classes_arr],
+    ];
+
+    if ($smart_title_settings['smart_title__link']) {
+      $smart_title[0] = $entity->toLink()->toRenderable();
+    }
+
+    $context = [
+      'entity' => $entity,
+      'display' => $display,
+      'view_mode' => $view_mode,
+    ];
+    \Drupal::moduleHandler()->alter('smart_title', $smart_title, $context);
+
+    $build['smart_title'] = $smart_title;
+  }
+}
+
+/**
+ * Implements hook_preprocess().
+ */
+function smart_title_preprocess(&$variables, $hook) {
+  $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo($hook);
+
+  if (!empty($bundle_info)) {
+    // Restoring configurable base fields which's original output is hidden for
+    // example by template_preprocess_node().
+    foreach (_smart_title_view_configurable_base_fields($hook) as $base_field_name) {
+      if (!empty($variables['content']["smart__temp_$base_field_name"])) {
+        $variables['content'][$base_field_name] = $variables['content']["smart__temp_$base_field_name"];
+        unset($variables['content']["smart__temp_$base_field_name"]);
+      }
+    }
+
+    // Determine whether the `page` property should be set to TRUE to prevent
+    // rendering the original label.
+    $evdIdArr = ['type' => $hook];
+    if (!empty($variables['elements']['#' . $hook])) {
+      $evdIdArr['viewMode'] = $variables['elements']['#' . $hook]->bundle();
+    };
+    $evdStorage = \Drupal::service('entity_type.manager')
+      ->getStorage('entity_view_display');
+
+    $evd = isset($variables['view_mode']) && $evdStorage->load(implode('.', $evdIdArr + [$variables['view_mode']])) ?
+      $evdStorage->load(implode('.', $evdIdArr + [$variables['view_mode']])) :
+      $evdStorage->load(implode('.', $evdIdArr + ['default']));
+
+    if (
+      $evd &&
+      $evd->getThirdPartySetting('smart_title', 'enabled') && isset($variables['page'])
+    ) {
+      $variables['page'] = TRUE;
+    }
+  }
+}
+
+/**
+ * Multistep submit callback for Smart Title extra field settings.
+ *
+ * @param array $form
+ *   The form definition array for the entity view display configuration form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The current state of the form.
+ */
+function _smart_title_entity_view_display_multistep_submit(array $form, FormStateInterface $form_state) {
+  $settings_to_save = [];
+  $field_values = $form_state->getValue('fields', ['smart_title' => []]);
+
+  if (!empty($field_values['smart_title']['settings_edit_form'])) {
+    $settings_to_save = !empty($field_values['smart_title']['settings_edit_form']['settings']) ?
+      $field_values['smart_title']['settings_edit_form']['settings'] : [];
+  }
+
+  $form_state->set('smart_title_tempvalues', $settings_to_save);
+  $form_state->setRebuild();
+}
+
+/**
+ * Submit callback for entity view displays where Smart Title is enabled.
+ *
+ * @param array $form
+ *   The form definition array for the entity view display configuration form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The current state of the form.
+ */
+function _smart_title_entity_view_display_submit(array $form, FormStateInterface $form_state) {
+  $entity_view_display_entity = $form_state->getFormObject()->getEntity();
+  $settings_to_save = !empty($form_state->get('smart_title_tempvalues')) ? $form_state->get('smart_title_tempvalues') : [];
+  $field_values = $form_state->getValue('fields', ['smart_title' => []]);
+
+  if (!empty($field_values['smart_title']['settings_edit_form'])) {
+    // Format settings form was opened, saving those values.
+    $settings_to_save = !empty($field_values['smart_title']['settings_edit_form']['settings']) ?
+      $field_values['smart_title']['settings_edit_form']['settings'] : [];
+  }
+
+  if ($field_values['smart_title']['region'] === 'hidden') {
+    $entity_view_display_entity->unSetThirdPartySetting('smart_title', 'settings');
+  }
+  else {
+    $settings_to_save += [
+      'smart_title__tag' => 'h2',
+      'smart_title__classes' => Html::getClass($entity_view_display_entity->getTargetEntityTypeId() . '__title'),
+      'smart_title__link' => TRUE,
+    ];
+    $entity_view_display_entity->setThirdPartySetting('smart_title', 'settings', $settings_to_save);
+  }
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ *
+ * Alter created and uid base fields: making them configurable for view display
+ * context.
+ */
+function smart_title_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  if ($entity_type->id() === 'node') {
+    foreach (_smart_title_view_configurable_base_fields('node') as $field_name) {
+      if (!empty($fields[$field_name])) {
+        $view_display_options = $fields[$field_name]->getDisplayOptions('view');
+        $view_display_options['type'] = 'hidden';
+        $fields[$field_name]->setDisplayOptions('view', $view_display_options);
+        $fields[$field_name]->setDisplayConfigurable('view', TRUE);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view_alter() for node.
+ */
+function smart_title_node_view_alter(&$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  foreach (_smart_title_view_configurable_base_fields('node') as $base_field_name) {
+    if (!empty($build[$base_field_name])) {
+      // Create a shadow copy of these base fields. template_preprocess_node()
+      // removes the original output of these field and we won't be able to get
+      // them on render.
+      $build["smart__temp_$base_field_name"] = $build[$base_field_name];
+    }
+  }
+}
+
+/**
+ * Returns the available HTML tags for Smart Title formatter.
+ *
+ * @return array
+ *   Wrapper options for smart title formatter.
+ */
+function _smart_title_tag_options() {
+  return [
+    'h1' => 'H1',
+    'h2' => 'H2',
+    'h3' => 'H3',
+    'h4' => 'H4',
+    'h5' => 'H5',
+    'h6' => 'H6',
+    'div' => 'div',
+    'span' => 'span',
+  ];
+}
+
+/**
+ * Get display configurable node fields.
+ *
+ * @return array
+ *   Array of display configurable base field's name.
+ */
+function _smart_title_view_configurable_base_fields($entity_type_id) {
+  $configurable_base_fields = [];
+  \Drupal::moduleHandler()->alter('smart_title_view_configurable_base_fields', $configurable_base_fields, $entity_type_id);
+  return $configurable_base_fields;
+}

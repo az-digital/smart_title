@@ -1,0 +1,7 @@
+name: Smart Title
+description: Make entity labels visible and configurable by the entity view display configuration form
+core: 8.x
+package: Content
+type: module
+dependencies: {}
+configure: smart_title.settings

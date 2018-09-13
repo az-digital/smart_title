@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * @file
+ * Install and update functions for Smart Title.
+ *
+ * @TODO: Add uninstall hook to purge smart_title settings.
+ */
