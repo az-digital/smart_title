@@ -307,14 +307,16 @@ function smart_title_entity_view(&$build, EntityInterface $entity, EntityViewDis
       ]);
     }
 
+    if ($smart_title_settings['smart_title__link']) {
+      $title_markup = $smart_title;
+      $smart_title = $entity->toLink()->toRenderable();
+      $smart_title['#title'] = $title_markup;
+    }
+
     $smart_title['#theme_wrappers']['smart_title'] = [
       '#tag' => $smart_title_settings['smart_title__tag'],
       '#attributes' => ['class' => $classes_arr],
     ];
-
-    if ($smart_title_settings['smart_title__link']) {
-      $smart_title[0] = $entity->toLink()->toRenderable();
-    }
 
     $context = [
       'entity' => $entity,

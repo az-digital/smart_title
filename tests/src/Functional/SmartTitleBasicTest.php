@@ -67,6 +67,10 @@ class SmartTitleBasicTest extends SmartTitleBrowserTestBase {
     $this->drupalGet($node_1_page->toUrl()->toString());
     $web_assert = $this->assertSession();
     $web_assert->elementExists('css', 'article .node__content h2.node__title');
+
+    // Verify that smart title's link wraps the title field's output, so that
+    // it is NOT inside the field element.
+    $web_assert->elementExists('css', 'article .node__content h2.node__title > a > .field--name-title');
   }
 
 }
