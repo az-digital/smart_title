@@ -96,12 +96,14 @@ function smart_title_form_entity_view_display_form_alter(&$form, FormStateInterf
 
     if ($smart_title['region']['#default_value'] !== 'hidden') {
       // Extra field is set to be visible.
-      // Getting our settings.
-      $smart_title_settings = $form_state_entity->getThirdPartySetting('smart_title', 'settings', [
-        'smart_title__tag' => 'h2',
-        'smart_title__classes' => Html::getClass($target_entity_type_id . '__title'),
-        'smart_title__link' => TRUE,
-      ]);
+      // Getting our settings: if we have temporary values, we want to operate
+      // with those, if not, we try to get the active config (extended)
+      $smart_title_settings = $form_state->get('smart_title_tempvalues') ?:
+        $form_state_entity->getThirdPartySetting('smart_title', 'settings', [
+          'smart_title__tag' => 'h2',
+          'smart_title__classes' => Html::getClass($target_entity_type_id . '__title'),
+          'smart_title__link' => TRUE,
+        ]);
 
       if ($provide_form) {
         unset($smart_title['settings_summary']);
@@ -377,14 +379,16 @@ function smart_title_preprocess(&$variables, $hook) {
  */
 function _smart_title_entity_view_display_multistep_submit(array $form, FormStateInterface $form_state) {
   $settings_to_save = [];
-  $field_values = $form_state->getValue('fields', ['smart_title' => []]);
+  $field_values = $form_state->getValue('fields', [
+    'smart_title' => ['settings_edit_form' => []],
+  ]);
 
   if (!empty($field_values['smart_title']['settings_edit_form'])) {
     $settings_to_save = !empty($field_values['smart_title']['settings_edit_form']['settings']) ?
       $field_values['smart_title']['settings_edit_form']['settings'] : [];
+    $form_state->set('smart_title_tempvalues', $settings_to_save);
   }
 
-  $form_state->set('smart_title_tempvalues', $settings_to_save);
   $form_state->setRebuild();
 }
 
@@ -397,20 +401,26 @@ function _smart_title_entity_view_display_multistep_submit(array $form, FormStat
  *   The current state of the form.
  */
 function _smart_title_entity_view_display_submit(array $form, FormStateInterface $form_state) {
+  /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $entity_view_display_entity */
   $entity_view_display_entity = $form_state->getFormObject()->getEntity();
-  $settings_to_save = !empty($form_state->get('smart_title_tempvalues')) ? $form_state->get('smart_title_tempvalues') : [];
+  $settings_to_save = !empty($form_state->get('smart_title_tempvalues')) ?
+    $form_state->get('smart_title_tempvalues') :
+    $entity_view_display_entity->getThirdPartySetting('smart_title', 'settings', []);
   $field_values = $form_state->getValue('fields', ['smart_title' => []]);
 
+  // If format settings form was opened when the view display form was asked to
+  // save its config, we want to save values from that format settings subform.
   if (!empty($field_values['smart_title']['settings_edit_form'])) {
-    // Format settings form was opened, saving those values.
     $settings_to_save = !empty($field_values['smart_title']['settings_edit_form']['settings']) ?
       $field_values['smart_title']['settings_edit_form']['settings'] : [];
   }
 
+  // If field is hidden, remove our settings.
   if ($field_values['smart_title']['region'] === 'hidden') {
     $entity_view_display_entity->unSetThirdPartySetting('smart_title', 'settings');
   }
   else {
+    // Save the (possibly new) config.
     $settings_to_save += [
       'smart_title__tag' => 'h2',
       'smart_title__classes' => Html::getClass($entity_view_display_entity->getTargetEntityTypeId() . '__title'),

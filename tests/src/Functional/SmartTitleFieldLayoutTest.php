@@ -28,8 +28,6 @@ class SmartTitleFieldLayoutTest extends SmartTitleBrowserTestBase {
    */
   public function testSmartTitlePlacement() {
     $this->drupalLogin($this->adminUser);
-    // Add test node.
-    $node_1_page = $this->drupalCreateNode(['type' => 'test_page']);
 
     // Enable Smart Title for test_page node type.
     $this->drupalPostForm('admin/config/content/smart-title', [
@@ -61,9 +59,9 @@ class SmartTitleFieldLayoutTest extends SmartTitleBrowserTestBase {
     // Test that Smart Title is displayed on the front page (teaser view mode)
     // in the corresponding field layout region for admin user.
     $this->drupalGet('node');
-    $this->assertSession()->pageTextContains($node_1_page->label());
+    $this->assertSession()->pageTextContains($this->testPageNode->label());
     $article_title = $this->xpath($this->cssSelectToXpath('article .layout__region--second h3.smart-title--test'));
-    $this->assertEquals($node_1_page->label(), $article_title[0]->getText());
+    $this->assertEquals($this->testPageNode->label(), $article_title[0]->getText());
 
     // Default title isn't displayed on the front page for admin user.
     $this->drupalGet('node');
@@ -75,9 +73,9 @@ class SmartTitleFieldLayoutTest extends SmartTitleBrowserTestBase {
     // Smart Title is displayed on the front page (teaser vm) in the
     // corresponding field layout region for anonymous user.
     $this->drupalGet('node');
-    $this->assertSession()->pageTextContains($node_1_page->label());
+    $this->assertSession()->pageTextContains($this->testPageNode->label());
     $article_title = $this->xpath($this->cssSelectToXpath('article .layout__region--second h3.smart-title--test'));
-    $this->assertEquals($node_1_page->label(), $article_title[0]->getText());
+    $this->assertEquals($this->testPageNode->label(), $article_title[0]->getText());
 
     // Default title isn't displayed on the front page for anonymous user.
     $this->drupalGet('node');

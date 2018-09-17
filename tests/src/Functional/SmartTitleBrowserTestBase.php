@@ -37,6 +37,13 @@ abstract class SmartTitleBrowserTestBase extends BrowserTestBase {
   protected $adminUser;
 
   /**
+   * Test page node.
+   *
+   * @var \Drupal\node\Entity\NodeInterface
+   */
+  protected $testPageNode;
+
+  /**
    * Setup test.
    */
   protected function setUp() {
@@ -53,6 +60,9 @@ abstract class SmartTitleBrowserTestBase extends BrowserTestBase {
       'name' => 'Test page',
       'display_submitted' => FALSE,
     ]);
+
+    // Add test node.
+    $this->testPageNode = $this->drupalCreateNode(['type' => 'test_page']);
 
     // Create users and test node.
     $this->adminUser = $this->drupalCreateUser([
