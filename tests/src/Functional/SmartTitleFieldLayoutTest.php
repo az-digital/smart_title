@@ -5,7 +5,7 @@ namespace Drupal\Tests\smart_title\Functional;
 /**
  * Tests the module's title placement function.
  *
- * @group Smart Title
+ * @group smart_title
  */
 class SmartTitleFieldLayoutTest extends SmartTitleBrowserTestBase {
 
@@ -14,12 +14,13 @@ class SmartTitleFieldLayoutTest extends SmartTitleBrowserTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'block',
     'field_ui',
     'field_layout',
     'node',
     'smart_title',
+    'smart_title_ui',
     'views',
   ];
 
@@ -28,11 +29,6 @@ class SmartTitleFieldLayoutTest extends SmartTitleBrowserTestBase {
    */
   public function testSmartTitlePlacement() {
     $this->drupalLogin($this->adminUser);
-
-    // Enable Smart Title for test_page node type.
-    $this->drupalPostForm('admin/config/content/smart-title', [
-      'node_bundles[node:test_page]' => TRUE,
-    ], 'Save configuration');
 
     // Enable Smart Title for test_page teaser display mode and make it visible.
     $this->drupalPostForm('admin/structure/types/manage/test_page/display/teaser', [

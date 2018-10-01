@@ -4,4 +4,3 @@ core: 8.x
 package: Content
 type: module
 dependencies: {}
-configure: smart_title.settings

@@ -3,10 +3,10 @@ smart_title.settings:
   label: 'Smart Title settings'
   mapping:
     smart_title:
-    type: sequence
-    label: 'Smart Title enabled entity bundles'
-    sequence:
-      type: string
+      type: sequence
+      label: 'Smart Title enabled entity bundles'
+      sequence:
+        type: string
 
 core.entity_view_display.*.*.*.third_party.smart_title:
   type: mapping
@@ -26,5 +26,7 @@ core.entity_view_display.*.*.*.third_party.smart_title:
           type: string
           label: 'HTML tag used for the Smart Title'
         smart_title__classes:
-          type: string
+          type: sequence
           label: 'Classes of the Smart Title'
+          sequence:
+            type: string

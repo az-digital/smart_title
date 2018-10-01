@@ -21,7 +21,7 @@ abstract class SmartTitleBrowserTestBase extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'block',
     'field_ui',
     'node',
@@ -52,7 +52,9 @@ abstract class SmartTitleBrowserTestBase extends BrowserTestBase {
     $this->drupalPlaceBlock('local_tasks_block');
     $this->drupalPlaceBlock('system_main_block');
 
-    $this->config('system.site')->set('page.front', '/node')->save();
+    $this->config('system.site')
+      ->set('page.front', '/node')
+      ->save();
 
     // Create test_block and test_page node types.
     $this->drupalCreateContentType([
@@ -60,6 +62,12 @@ abstract class SmartTitleBrowserTestBase extends BrowserTestBase {
       'name' => 'Test page',
       'display_submitted' => FALSE,
     ]);
+
+    // Add Smart Title for test_page.
+    $this->config('smart_title.settings')
+      ->set('smart_title', ['node:test_page'])
+      ->save();
+    $this->rebuildAll();
 
     // Add test node.
     $this->testPageNode = $this->drupalCreateNode(['type' => 'test_page']);
