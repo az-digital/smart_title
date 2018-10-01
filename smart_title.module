@@ -23,7 +23,9 @@ function smart_title_help($route_name, RouteMatchInterface $route_match) {
     case 'help.page.smart_title':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Smart Title makes content entity labels visible and configurable on Field UI forms.') . '</p>';
+      $output .= '<p>' . t('Smart Title makes content entity labels visible and configurable on Field UI forms. For more information, see the <a href=":smart-title-docs">online documentation for the Smart Title module</a>.', [
+        ':smart-title-docs' => 'https://www.drupal.org/docs/8/modules/smart-title',
+      ]) . '</p>';
       return $output;
 
     default:
