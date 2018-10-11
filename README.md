@@ -21,12 +21,12 @@ configurable on the entity view display configuration form.
 With Smart Title module, content entity labels are visible and configurable on
 _Field UI_ forms.
 
-Smart Title supports _Quick Edit_ and _Field Layout_ core modules and should
-work with every entity types which support _Field UI_ (have a _Manage display_
-form).
+Smart Title supports _Quick Edit_, _Field Layout_ and RDF core modules and
+should work with every entity types which support _Field UI_ (have a
+_Manage display_ form).
 
-The _Smart Title_ component could be enabled per `entity_type` and per `bundle` and
-can be switched on for each entity view mode.
+The _Smart Title_ component could be enabled per `entity_type` and per `bundle`
+and can be switched on for each entity view mode.
 For instance it can be used for _full_ view mode of the _Article_ content type
 only.
 
@@ -64,7 +64,8 @@ Example: you need to place _Article_ title after an _Image_ field.
 To enable _Smart Title_ for _Article_ content type's _teaser_ view mode ,
  * Enable _Smart Title_ for _Article_ content type: visit
    `/admin/config/content/smart-title` form, check _Article_ and save.
- * Enable _Smart Title_ for the teaser view mode: visit `/admin/structure/types/manage/article/display/teaser` and at the bottom
+ * Enable _Smart Title_ for the teaser view mode: visit
+   `/admin/structure/types/manage/article/display/teaser` and at the bottom
    of the page at _Smart Title_ check _Make entity title configurable_. Hit
    save again. Every other view modes of _Article_ will remain the same.
  * From this point, you'll have a _Smart Title_ element for this view mode.
