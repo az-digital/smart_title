@@ -94,7 +94,8 @@ function smart_title_entity_view(&$build, EntityInterface $entity, EntityViewDis
     $display->getThirdPartySettings('smart_title', 'enabled') &&
     $display->getComponent('smart_title')
   ) {
-    \Drupal::classResolver(SmartTitleBuilder::class)->buildView($build, $entity, $display);
+    \Drupal::classResolver()->getInstanceFromDefinition(SmartTitleBuilder::class)
+      ->buildView($build, $entity, $display);
   }
 }
 
