@@ -7,12 +7,13 @@
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\smart_title\EntityViewDisplayAlterer;
 use Drupal\smart_title\SmartTitleBuilder;
-use Drupal\smart_title\Form\SmartTitleEntityViewDisplayEditForm;
-use Drupal\smart_title\Form\SmartTitleEntityViewDisplayEditFormWithLayout;
 
 /**
  * Implements hook_help().
@@ -252,17 +253,14 @@ function _smart_title_defaults($entity_type_id = 'smart', $values_only = NULL, $
 }
 
 /**
- * Implements hook_entity_type_alter().
+ * Implements hook_form_alter().
  */
-function smart_title_entity_type_alter(array &$entity_types) {
-  /* @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
-  if (\Drupal::moduleHandler()->moduleExists('field_ui')) {
-    $entity_types['entity_view_display']
-      ->setFormClass('edit', SmartTitleEntityViewDisplayEditForm::class);
-
-    if (\Drupal::moduleHandler()->moduleExists('field_layout')) {
-      $entity_types['entity_view_display']
-        ->setFormClass('edit', SmartTitleEntityViewDisplayEditFormWithLayout::class);
-    }
+function smart_title_form_alter(&$form, FormStateInterface $form_state) {
+  if (
+    ($form_state->getFormObject() instanceof EntityFormInterface) &&
+    ($form_state->getFormObject()->getEntity() instanceof EntityViewDisplayInterface)
+  ) {
+    \Drupal::classResolver()->getInstanceFromDefinition(EntityViewDisplayAlterer::class)
+      ->addSmartTitle($form, $form_state);
   }
 }
