@@ -10,18 +10,10 @@ namespace Drupal\Tests\smart_title\Functional;
 class SmartTitleFieldLayoutTest extends SmartTitleBrowserTestBase {
 
   /**
-   * The modules to be loaded for this test.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
-    'block',
-    'field_ui',
     'field_layout',
-    'node',
-    'smart_title',
-    'smart_title_ui',
-    'views',
   ];
 
   /**

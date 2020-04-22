@@ -10,16 +10,17 @@ use Drupal\Tests\BrowserTestBase;
 abstract class SmartTitleBrowserTestBase extends BrowserTestBase {
 
   /**
-   * The profile to install as a basis for testing.
-   *
-   * @var string
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
    */
   protected $profile = 'testing';
 
   /**
-   * The standard modules to be loaded for all tests.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'block',
@@ -39,12 +40,12 @@ abstract class SmartTitleBrowserTestBase extends BrowserTestBase {
   /**
    * Test page node.
    *
-   * @var \Drupal\node\Entity\NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $testPageNode;
 
   /**
-   * Setup test.
+   * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();

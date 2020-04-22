@@ -5,6 +5,7 @@ namespace Drupal\smart_title;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -52,7 +53,9 @@ class EntityViewDisplayAlterer implements ContainerInjectionInterface {
    *   The form state object.
    */
   public function addSmartTitle(array &$form, FormStateInterface $form_state) {
-    $entity = $form_state->getFormObject()->getEntity();
+    if (!($entity = static::getViewDisplayEntityFromFormState($form_state))) {
+      return;
+    }
 
     if ($entity->getThirdPartySetting('layout_builder', 'enabled')) {
       return;
@@ -225,7 +228,9 @@ class EntityViewDisplayAlterer implements ContainerInjectionInterface {
    *   The form state object.
    */
   public static function submitSmartTitleForm(array &$form, FormStateInterface $form_state) {
-    $entity = $form_state->getFormObject()->getEntity();
+    if (!($entity = static::getViewDisplayEntityFromFormState($form_state))) {
+      return;
+    }
 
     // Check that Smart Title is/should be enabled.
     if ((bool) $form_state->getValue('smart_title__enabled')) {
@@ -292,7 +297,14 @@ class EntityViewDisplayAlterer implements ContainerInjectionInterface {
    *   The FormState object.
    */
   protected function addSmartTitleBuilder(array &$form, FormStateInterface $form_state) {
+    if (!($form_state->getFormObject() instanceof EntityFormInterface)) {
+      return;
+    }
+
     $entity = $form_state->getFormObject()->getEntity();
+    if (!($entity instanceof EntityViewDisplayInterface)) {
+      return;
+    }
 
     $form['smart_title'] = [
       '#type' => 'details',
@@ -406,6 +418,26 @@ class EntityViewDisplayAlterer implements ContainerInjectionInterface {
         '#default_value' => $smart_title_settings['smart_title__link'],
       ],
     ];
+  }
+
+  /**
+   * Gets the entity view display from the given form state.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   *
+   * @return \Drupal\Core\Entity\Display\EntityViewDisplayInterface|null
+   *   The entity view display entity from the form state, or NULL if cannot be
+   *   retrieved one.
+   */
+  private static function getViewDisplayEntityFromFormState(FormStateInterface $form_state) {
+    if (!($form_state->getFormObject() instanceof EntityFormInterface)) {
+      return NULL;
+    }
+
+    $entity = $form_state->getFormObject()->getEntity();
+
+    return $entity instanceof EntityViewDisplayInterface ? $entity : NULL;
   }
 
 }

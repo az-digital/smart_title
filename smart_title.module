@@ -92,7 +92,7 @@ function smart_title_entity_extra_field_info() {
 function smart_title_entity_view(&$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
   if (
     !$entity->isNew() &&
-    $display->getThirdPartySettings('smart_title', 'enabled') &&
+    $display->getThirdPartySetting('smart_title', 'enabled') &&
     $display->getComponent('smart_title')
   ) {
     \Drupal::classResolver()->getInstanceFromDefinition(SmartTitleBuilder::class)

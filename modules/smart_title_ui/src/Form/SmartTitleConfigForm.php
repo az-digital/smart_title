@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -38,7 +39,7 @@ class SmartTitleConfigForm extends ConfigFormBase {
    *
    * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
    */
-  protected $entityTypeBundeInfo;
+  protected $entityTypeBundleInfo;
 
   /**
    * Constructs a new UpdateSettingsForm.
@@ -165,6 +166,7 @@ class SmartTitleConfigForm extends ConfigFormBase {
     $not_smart_title_capable_bundles = array_diff($smart_title_bundles, $smart_title_bundles_setting);
 
     foreach ($evds as $evd_id => $evd) {
+      assert($evd instanceof EntityViewDisplayInterface);
       list($target_entity_type_id, $target_bundle) = explode('.', $evd_id);
       if (in_array("$target_entity_type_id:$target_bundle", $not_smart_title_capable_bundles)) {
         $evd->unsetThirdPartySetting('smart_title', 'enabled')

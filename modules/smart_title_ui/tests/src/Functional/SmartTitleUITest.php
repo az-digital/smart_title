@@ -14,9 +14,12 @@ use Drupal\Tests\BrowserTestBase;
 class SmartTitleUITest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var string[]
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
    */
   public static $modules = [
     'node',

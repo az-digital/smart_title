@@ -1,5 +1,6 @@
 ## 8.x-1.x
  * Enabling module disables Layout Builder (Issue #3124548)
+ * Prepare Drupal 9 compatibility: code and test cleanup (Issue #3129835)
 
 ## 8.x-1.0-alpha2
  * Fix Drupal::classResolver() error (Issue #3005952)

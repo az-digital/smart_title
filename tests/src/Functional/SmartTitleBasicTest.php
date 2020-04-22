@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\smart_title\Functional;
 
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+
 /**
  * Tests the module's title hide functionality.
  *
@@ -17,12 +19,12 @@ class SmartTitleBasicTest extends SmartTitleBrowserTestBase {
 
     // Node teaser title was displayed on the front page for admin user.
     $this->drupalGet('node');
-    $article_title = $this->xpath($this->cssSelectToXpath('article h2'));
+    $article_title = $this->xpath($this->cssSelectToXpath('article > h2'));
     $this->assertEquals($this->testPageNode->label(), $article_title[0]->getText());
 
     // Node title wasn't displayed on the node's full page for admin user.
     $this->drupalGet('node/' . $this->testPageNode->id());
-    $article_title = $this->xpath($this->cssSelectToXpath('article h2'));
+    $article_title = $this->xpath($this->cssSelectToXpath('article > h2'));
     $this->assertEquals($article_title, []);
 
     $this->drupalLogout();
@@ -48,7 +50,10 @@ class SmartTitleBasicTest extends SmartTitleBrowserTestBase {
     ], 'Save');
 
     // Verify settings save.
-    $display = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.' . $this->testPageNode->getType() . '.default');
+    $display = $this->container->get('entity_type.manager')
+      ->getStorage('entity_view_display')
+      ->load('node.' . $this->testPageNode->getType() . '.default');
+    assert($display instanceof EntityViewDisplayInterface);
     $smart_title_enabled = $display->getThirdPartySetting('smart_title', 'enabled');
     $saved_settings = $display->getThirdPartySetting('smart_title', 'settings');
     $this->assertTrue($smart_title_enabled);
@@ -66,7 +71,10 @@ class SmartTitleBasicTest extends SmartTitleBrowserTestBase {
     $page->uncheckField('fields[smart_title][settings_edit_form][settings][smart_title__link]');
     $this->drupalPostForm(NULL, [], 'Cancel');
 
-    $display = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.' . $this->testPageNode->getType() . '.default');
+    $display = $this->container->get('entity_type.manager')
+      ->getStorage('entity_view_display')
+      ->load('node.' . $this->testPageNode->getType() . '.default');
+    assert($display instanceof EntityViewDisplayInterface);
     $smart_title_enabled = $display->getThirdPartySetting('smart_title', 'enabled');
     $saved_settings = $display->getThirdPartySetting('smart_title', 'settings');
     $this->assertTrue($smart_title_enabled);
@@ -82,7 +90,7 @@ class SmartTitleBasicTest extends SmartTitleBrowserTestBase {
 
     $web_assert->elementExists('css', 'article > h2');
     // Test that the expected settings are applied onto the title markup.
-    $web_assert->elementNotExists('css', 'article .node__content h2.node__title');
+    $web_assert->elementNotExists('css', 'article > div > h2.node__title');
 
     $this->drupalLogout();
 
@@ -92,10 +100,10 @@ class SmartTitleBasicTest extends SmartTitleBrowserTestBase {
     // Check page title.
     $this->assertTitle(strtr('@title | Drupal', ['@title' => $this->testPageNode->getTitle()]));
     // Check that title element exists.
-    $web_assert->elementExists('css', 'article .node__content h2.node__title');
+    $web_assert->elementExists('css', 'article > div > h2.node__title');
     // Verify that smart title's link wraps the title field's output, so that
     // it is NOT inside the field element.
-    $web_assert->elementExists('css', 'article .node__content h2.node__title > a > .field--name-title');
+    $web_assert->elementExists('css', 'article > div > h2.node__title > a > span');
   }
 
 }
