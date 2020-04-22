@@ -1,4 +1,4 @@
-## 8.x-1.x
+## 8.x-1.0-beta1
  * Enabling module disables Layout Builder (Issue #3124548)
  * Prepare Drupal 9 compatibility: code and test cleanup (Issue #3129835)
  * Make Smart Title compatible with Drupal 9 (Issue #3129837)
