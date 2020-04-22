@@ -1,6 +1,7 @@
 name: Smart Title
 description: Make entity labels visible and configurable by the entity view display configuration form
-core: 8.x
-package: Content
 type: module
+package: Content
+core: 8.x
+core_version_requirement: ^8 || ^9
 dependencies: {}
