@@ -14,17 +14,18 @@ class SmartTitleConfigTest extends SmartTitleBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->drupalLogin($this->adminUser);
 
     // Enable Smart Title for the test_page content type's teaser.
     $this->drupalLogin($this->adminUser);
-    $this->drupalPostForm('admin/structure/types/manage/test_page/display/teaser', [
+    $this->drupalGet('admin/structure/types/manage/test_page/display/teaser');
+    $this->submitForm([
       'smart_title__enabled' => TRUE,
     ], 'Save');
-    $this->drupalPostForm(NULL, [
+    $this->submitForm([
       'fields[smart_title][weight]' => '-5',
       'fields[smart_title][region]' => 'content',
     ], 'Save');
@@ -61,7 +62,7 @@ class SmartTitleConfigTest extends SmartTitleBrowserTestBase {
     if (!empty($invalid_values)) {
       // Test that exception is thrown.
       try {
-        $this->drupalPostForm(NULL, [
+        $this->submitForm([
           "fields[smart_title][settings_edit_form][settings][smart_title__tag]" => $input['smart_title__tag'],
           "fields[smart_title][settings_edit_form][settings][smart_title__classes]" => $input['smart_title__classes'],
           "fields[smart_title][settings_edit_form][settings][smart_title__link]" => $input['smart_title__link'],
@@ -69,7 +70,6 @@ class SmartTitleConfigTest extends SmartTitleBrowserTestBase {
         $this->fail('Expected exception has not been thrown.');
       }
       catch (\Exception $e) {
-        $this->pass('Expected exception has been thrown.');
       }
 
       // Let's save the other values.
@@ -82,10 +82,10 @@ class SmartTitleConfigTest extends SmartTitleBrowserTestBase {
         $edit["fields[smart_title][settings_edit_form][settings][$key]"] = $value;
       }
 
-      $this->drupalPostForm(NULL, $edit, 'Save');
+      $this->submitForm($edit, 'Save');
     }
     else {
-      $this->drupalPostForm(NULL, [
+      $this->submitForm([
         "fields[smart_title][settings_edit_form][settings][smart_title__tag]" => $input['smart_title__tag'],
         "fields[smart_title][settings_edit_form][settings][smart_title__classes]" => $input['smart_title__classes'],
         "fields[smart_title][settings_edit_form][settings][smart_title__link]" => $input['smart_title__link'],
@@ -97,7 +97,7 @@ class SmartTitleConfigTest extends SmartTitleBrowserTestBase {
 
     // Re-save form again.
     $this->drupalGet('admin/structure/types/manage/test_page/display/teaser');
-    $this->drupalPostForm(NULL, [], 'Save');
+    $this->submitForm([], 'Save');
 
     // Verify saved settings again.
     $this->assertSmartTitleExpectedConfigs($expectation);

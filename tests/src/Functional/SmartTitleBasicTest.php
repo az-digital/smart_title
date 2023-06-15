@@ -41,10 +41,11 @@ class SmartTitleBasicTest extends SmartTitleBrowserTestBase {
 
     // Enable Smart Title for the test_page content type.
     $this->drupalLogin($this->adminUser);
-    $this->drupalPostForm('admin/structure/types/manage/test_page/display', [
+    $this->drupalGet('admin/structure/types/manage/test_page/display');
+    $this->submitForm([
       'smart_title__enabled' => TRUE,
     ], 'Save');
-    $this->drupalPostForm(NULL, [
+    $this->submitForm([
       'fields[smart_title][weight]' => '-5',
       'fields[smart_title][region]' => 'content',
     ], 'Save');
@@ -69,7 +70,7 @@ class SmartTitleBasicTest extends SmartTitleBrowserTestBase {
     $page->selectFieldOption('fields[smart_title][settings_edit_form][settings][smart_title__tag]', 'span');
     $page->fillField('fields[smart_title][settings_edit_form][settings][smart_title__classes]', 'test classes');
     $page->uncheckField('fields[smart_title][settings_edit_form][settings][smart_title__link]');
-    $this->drupalPostForm(NULL, [], 'Cancel');
+    $this->submitForm([], 'Cancel');
 
     $display = $this->container->get('entity_type.manager')
       ->getStorage('entity_view_display')
@@ -98,7 +99,7 @@ class SmartTitleBasicTest extends SmartTitleBrowserTestBase {
     $this->drupalGet($this->testPageNode->toUrl());
     $web_assert = $this->assertSession();
     // Check page title.
-    $this->assertTitle(strtr('@title | Drupal', ['@title' => $this->testPageNode->getTitle()]));
+    $this->assertSession()->titleEquals(strtr('@title | Drupal', ['@title' => $this->testPageNode->getTitle()]));
     // Check that title element exists.
     $web_assert->elementExists('css', 'article > div > h2.node__title');
     // Verify that smart title's link wraps the title field's output, so that

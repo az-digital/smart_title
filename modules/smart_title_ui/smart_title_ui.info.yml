@@ -2,8 +2,7 @@ name: Smart Title UI
 description: Administrator interface for Smart Title module
 type: module
 package: Content
-core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 dependencies:
   - smart_title:smart_title
 configure: smart_title_ui.settings

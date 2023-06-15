@@ -21,7 +21,7 @@ class SmartTitleUITest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'smart_title_ui',
     'user',
@@ -30,7 +30,7 @@ class SmartTitleUITest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create a node type.
@@ -64,7 +64,7 @@ class SmartTitleUITest extends BrowserTestBase {
     $page->hasUncheckedField('test_page');
 
     // Set up Smart Title for test node.
-    $this->drupalPostForm(NULL, [
+    $this->submitForm([
       'node_bundles[node:test_page]' => 1,
     ], 'Save configuration');
 
@@ -76,7 +76,7 @@ class SmartTitleUITest extends BrowserTestBase {
     $this->assertTrue(['node:test_page'] === $smart_title_bundles);
 
     // Uncheck test_page.
-    $this->drupalPostForm(NULL, [
+    $this->submitForm([
       'node_bundles[node:test_page]' => 0,
     ], 'Save configuration');
 

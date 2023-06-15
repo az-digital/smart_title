@@ -17,36 +17,35 @@ class SmartTitleXssTest extends SmartTitleBrowserTestBase {
   public function testConfigXss() {
     // Enable Smart Title for the test_page content type.
     $this->drupalLogin($this->adminUser);
-    $this->drupalPostForm('admin/structure/types/manage/test_page/display', [
+    $this->drupalGet('admin/structure/types/manage/test_page/display');
+    $this->submitForm([
       'smart_title__enabled' => TRUE,
     ], 'Save');
-    $this->drupalPostForm(NULL, [
+    $this->submitForm([
       'fields[smart_title][weight]' => '-5',
       'fields[smart_title][region]' => 'content',
     ], 'Save');
     $this->click('[name="smart_title_settings_edit"]');
-    $this->drupalPostForm(NULL, [
+    $this->submitForm([
       'fields[smart_title][settings_edit_form][settings][smart_title__classes]' => '<script>alert("XSS classes")</script>',
     ], 'Save');
 
     try {
-      $this->drupalPostForm(NULL, [
+      $this->submitForm([
         'fields[smart_title][settings_edit_form][settings][smart_title__tag]' => '<script>alert("XSS tag")</script>',
       ], 'Save');
       $this->fail('Expected exception has not been thrown.');
     }
     catch (\Exception $e) {
-      $this->pass('Expected exception has been thrown.');
     }
 
     try {
-      $this->drupalPostForm(NULL, [
+      $this->submitForm([
         'fields[smart_title][settings_edit_form][settings][smart_title__link]' => '<script>alert("XSS link")</script>',
       ], 'Save');
       $this->fail('Expected exception has not been thrown.');
     }
     catch (\Exception $e) {
-      $this->pass('Expected exception has been thrown.');
     }
 
     // Summary is protected.

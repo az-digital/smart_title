@@ -21,9 +21,10 @@ class SmartTitleFieldLayoutTest extends SmartTitleBrowserTestBase {
    */
   public function testSmartTitlePlacement() {
     $this->drupalLogin($this->adminUser);
+    $this->drupalGet('admin/structure/types/manage/test_page/display/teaser');
 
     // Enable Smart Title for test_page teaser display mode and make it visible.
-    $this->drupalPostForm('admin/structure/types/manage/test_page/display/teaser', [
+    $this->submitForm([
       'smart_title__enabled' => TRUE,
     ], 'Save');
 
@@ -31,15 +32,16 @@ class SmartTitleFieldLayoutTest extends SmartTitleBrowserTestBase {
     $form_edit = [
       'field_layout' => 'layout_twocol',
     ];
-    $this->drupalPostForm('admin/structure/types/manage/test_page/display/teaser', $form_edit, 'Change layout');
-    $this->drupalPostForm(NULL, [], 'Save');
+    $this->drupalGet('admin/structure/types/manage/test_page/display/teaser');
+    $this->submitForm($form_edit, 'Change layout');
+    $this->submitForm([], 'Save');
 
     // Make Smart Title visible for teaser view mode with custom configuration.
-    $this->drupalPostForm(NULL, [
+    $this->submitForm([
       'fields[smart_title][region]' => 'second',
     ], 'Save');
     $this->click('[name="smart_title_settings_edit"]');
-    $this->drupalPostForm(NULL, [
+    $this->submitForm([
       'fields[smart_title][settings_edit_form][settings][smart_title__tag]' => 'h3',
       'fields[smart_title][settings_edit_form][settings][smart_title__classes]' => 'smart-title--test',
     ], 'Save');
