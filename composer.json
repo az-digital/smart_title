@@ -1,23 +1,33 @@
 {
-  "name": "drupal/smart_title",
+  "name": "az-digital/smart_title",
   "type": "drupal-module",
-  "description": "Makes entity labels visible and configurable on Field UI",
-  "homepage": "https://drupal.org/project/smart_title",
+  "description": "Fork of Drupal Smart Title module with D10 support.",
+  "homepage": "https://github.com/az-digital/smart_title",
   "keywords": ["Drupal"],
   "license": "GPL-2.0+",
   "authors": [
     {
       "name": "Zoltan Horvath",
       "email": "z.a.horvath@gmail.com",
-      "role": "Maintainer"
+      "role": "Original author & Drupal.org maintainer"
+    },
+    {
+      "name": "Arizona Digital",
+      "homepage": "https://github.com/az-digital",
+      "role": "Fork maintainers"
     }
   ],
   "support": {
-    "issues": "https://drupal.org/project/issues/smart_title",
-    "source": "https://cgit.drupalcode.org/smart_title"
+    "issues": "https://github.com/az-digital/background_image_formatter/issues",
+    "source": "https://github.com/az-digital/smart_title"
   },
-  "require": {},
+  "require": {
+    "drupal/core": "^9 || ^10"
+  },
   "require-dev": {},
+  "replace":{
+    "drupal/smart_title": "*"
+  },
   "archive": {
     "exclude": [
       ".git",
